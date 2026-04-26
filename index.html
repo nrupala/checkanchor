@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="version" content="1.0.0">
+    <meta name="app" content="CheckAnchor">
+    <title>CheckAnchor - Blockchain Credential Anchoring</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{--p:#7c3aed;--pd:#6d28d9;--s:#10b981;--w:#f59e0b;--d:#0f172a;--g:#64748b;--gl:#e2e8f0;--lt:#f8fafc;--w2:#fff;--gr:linear-gradient(135deg,#7c3aed,#a855f7)}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--lt);color:var(--d);line-height:1.5;font-size:14px}
+        .container{max-width:900px;margin:0 auto;padding:20px}
+        
+        .header{background:var(--w2);padding:20px;border-radius:12px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+        .logo{font-size:1.5rem;font-weight:800;background:var(--gr);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .tagline{color:var(--g);font-size:14px;margin-top:4px}
+        
+        .card{background:var(--w2);padding:20px;border-radius:12px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+        
+        input,textarea,select{width:100%;padding:12px;border:2px solid var(--gl);border-radius:8px;font-size:14px;margin-bottom:12px}
+        input:focus,textarea:focus{outline:none;border-color:var(--p)}
+        
+        .btn{padding:10px 18px;border-radius:8px;font-weight:600;cursor:pointer;border:none;font-size:13px;display:inline-flex;align-items:center;gap:6px}
+        .btn-primary{background:var(--gr);color:var(--w2)}
+        .btn-secondary{background:var(--gl);color:var(--d)}
+        .btn-success{background:var(--s);color:var(--w2)}
+        
+        .cred-card{background:var(--lt);padding:16px;border-radius:8px;margin:12px 0;border-left:4px solid var(--p)}
+        .cred-id{font-weight:700;color:var(--p);font-size:13px}
+        .cred-hash{font-family:monospace;font-size:11px;background:var(--gl);padding:4px 8px;border-radius:4px;word-break:break-all}
+        .cred-meta{color:var(--g);font-size:12px;margin-top:8px}
+        
+        .hash-preview{font-family:monospace;font-size:12px;background:#1e293b;color:#a5f3fc;padding:16px;border-radius:8px;min-height:100px;word-break:break-all}
+        
+        .stat{background:var(--lt);padding:16px;border-radius:8px;text-align:center}
+        .stat-value{font-size:1.5rem;font-weight:700;color:var(--p)}
+        
+        .tabs{display:flex;gap:4px;margin-bottom:16px}
+        .tab{padding:10px 16px;background:var(--gl);border:none;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px}
+        .tab.active{background:var(--p);color:var(--w2)}
+        
+        .hidden{display:none}
+        .badge{font-size:11px;padding:2px 8px;border-radius:4px;background:var(--gl)}
+    </style>
+</head>
+<body>
+    <div class="container">
+<div class="header">
+            <div class="logo">⛓️ CheckAnchor</div>
+            <div class="tagline">Blockchain Credential Anchoring - Create verifiable 50-year credentials anchored with SHA-256</div>
+            <div style="margin-top:12px;display:flex;gap:8px">
+                <a href="https://buymeacoffee.com/nrupalakolt" target="_blank" class="btn btn-secondary" style="padding:6px 12px;font-size:12px;text-decoration:none;display:flex;align-items:center;gap:4px">☕ Support</a>
+                <span class="text-muted" style="font-size:11px">🇨🇦 Proudly made in Canada</span>
+            </div>
+        </div>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('create')">➕ Create</button>
+            <button class="tab" onclick="showTab('verify')">✓ Verify</button>
+            <button class="tab" onclick="showTab('wallet')">💼 Wallet</button>
+            <button class="tab" onclick="showTab('explore')">🔍 Explore</button>
+        </div>
+        
+        <!-- CREATE -->
+        <div id="createTab">
+            <div class="card">
+                <h3>➕ Create Credential</h3>
+                <input type="text" id="credName" placeholder="Credential Name (e.g., AWS Solutions Architect)">
+                <input type="text" id="credIssuer" placeholder="Issuer (e.g., Amazon Web Services)">
+                <input type="date" id="credIssueDate" placeholder="Issue Date">
+                <input type="date" id="credExpiry" placeholder="Expiry Date (optional)">
+                <textarea id="credSkills" placeholder="Skills (comma separated: Cloud Architecture, Serverless, Kubernetes)" rows="3"></textarea>
+                <textarea id="credMeta" placeholder="Additional Metadata (JSON optional)" rows="2"></textarea>
+                <div style="display:flex;gap:8px">
+                    <button class="btn btn-primary" onclick="createCredential()">⛓️ Anchor Credential</button>
+                    <button class="btn btn-secondary" onclick="previewHash()">👁️ Preview Hash</button>
+                </div>
+            </div>
+            <div class="card">
+                <h3>🔗 SHA-256 Hash Preview</h3>
+                <div class="hash-preview" id="hashPreview">Enter credential details above and click Preview...</div>
+            </div>
+        </div>
+        
+        <!-- VERIFY -->
+        <div id="verifyTab" class="hidden">
+            <div class="card">
+                <h3>✓ Verify Credential</h3>
+                <input type="text" id="verifyId" placeholder="Credential ID (e.g., CA-2024-001)">
+                <button class="btn btn-primary" onclick="verifyCredential()">✓ Verify</button>
+                <div class="hash-preview" id="verifyResult" style="margin-top:12px">Enter Credential ID to verify...</div>
+            </div>
+        </div>
+        
+        <!-- WALLET -->
+        <div id="walletTab" class="hidden">
+            <div class="card">
+                <h3>💼 My Credentials</h3>
+                <div style="display:flex;gap:12px;margin-bottom:16px">
+                    <div class="stat"><div class="stat-value" id="credCount">0</div><div class="stat-label">Credentials</div></div>
+                    <div class="stat"><div class="stat-value" id="anchoredCount">0</div><div class="stat-label">Anchored</div></div>
+                </div>
+                <div id="credList"></div>
+                <button class="btn btn-secondary" style="margin-top:12px" onclick="exportWallet()">📤 Export Wallet</button>
+                <button class="btn btn-secondary" style="margin-top:12px" onclick="importWallet()">📥 Import Wallet</button>
+            </div>
+        </div>
+        
+        <!-- EXPLORE -->
+        <div id="exploreTab" class="hidden">
+            <div class="card">
+                <h3>🔍 Explore Blockchain</h3>
+                <div id="blockchainViz"></div>
+                <button class="btn btn-primary" style="margin-top:12px" onclick="simulateChain()">🔄 Simulate New Block</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === CHECKANCHOR - Blockchain Credential Anchoring ===
+        
+        let wallet = { credentials: [], lastHash: null };
+        
+        // Load from localStorage
+        const saved = localStorage.getItem('checkanchor_wallet');
+        if(saved) {
+            wallet = JSON.parse(saved);
+            renderWallet();
+        }
+        
+        function saveWallet() {
+            localStorage.setItem('checkanchor_wallet', JSON.stringify(wallet));
+        }
+        
+        // Generate SHA-256 hash (simulated for browser)
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+        
+        // Generate unique credential ID
+        function genCredId() {
+            const year = new Date().getFullYear();
+            const seq = (wallet.credentials.length + 1).toString().padStart(3, '0');
+            return `CA-${year}-${seq}`;
+        }
+        
+        // Preview hash before anchoring
+        async function previewHash() {
+            const data = {
+                name: document.getElementById('credName').value,
+                issuer: document.getElementById('credIssuer').value,
+                issueDate: document.getElementById('credIssueDate').value,
+                expiry: document.getElementById('credExpiry').value,
+                skills: document.getElementById('credSkills').value,
+                meta: document.getElementById('credMeta').value
+            };
+            
+            if(!data.name) {
+                document.getElementById('hashPreview').textContent = 'Enter credential details first...';
+                return;
+            }
+            
+            const hash = await sha256(JSON.stringify(data));
+            document.getElementById('hashPreview').textContent = 
+                `Hash: ${hash}\n\nData: ${JSON.stringify(data, null, 2)}`;
+        }
+        
+        // Create and anchor credential
+        async function createCredential() {
+            const cred = {
+                id: genCredId(),
+                name: document.getElementById('credName').value,
+                issuer: document.getElementById('credIssuer').value,
+                issueDate: document.getElementById('credIssueDate').value || new Date().toISOString().split('T')[0],
+                expiry: document.getElementById('credExpiry').value,
+                skills: document.getElementById('credSkills').value.split(',').map(s=>s.trim()).filter(s=>s),
+                meta: document.getElementById('credMeta').value
+            };
+            
+            if(!cred.name || !cred.issuer) {
+                alert('Name and Issuer required');
+                return;
+            }
+            
+            // Generate hash
+            const hashInput = JSON.stringify(cred) + (wallet.lastHash || 'GENESIS');
+            const hash = await sha256(hashInput);
+            
+            cred.hash = hash;
+            cred.previousHash = wallet.lastHash || 'GENESIS';
+            cred.anchoredAt = new Date().toISOString();
+            
+            wallet.credentials.push(cred);
+            wallet.lastHash = hash;
+            saveWallet();
+            
+            alert(`✅ Credential anchored!\nID: ${cred.id}\nHash: ${hash.substring(0, 16)}...`);
+            
+            // Clear form
+            document.getElementById('credName').value = '';
+            document.getElementById('credIssuer').value = '';
+            document.getElementById('credSkills').value = '';
+            document.getElementById('credMeta').value = '';
+            
+            renderWallet();
+        }
+        
+        // Verify credential
+        async function verifyCredential() {
+            const id = document.getElementById('verifyId').value.trim();
+            const cred = wallet.credentials.find(c => c.id === id);
+            
+            if(!cred) {
+                document.getElementById('verifyResult').textContent = `❌ Credential ${id} not found in wallet`;
+                return;
+            }
+            
+            // Verify hash chain
+            const expectedHash = await sha256(JSON.stringify(cred) + cred.previousHash);
+            const valid = expectedHash === cred.hash;
+            
+            document.getElementById('verifyResult').textContent = 
+                `${valid ? '✅' : '❌'} Verification: ${valid ? 'VALID' : 'INVALID'}\n\n` +
+                `ID: ${cred.id}\nName: ${cred.name}\nIssuer: ${cred.issuer}\n` +
+                `Issue Date: ${cred.issueDate}\nHash: ${cred.hash}\n` +
+                `Anchored: ${cred.anchoredAt}\nPrevious: ${cred.previousHash.substring(0, 8)}...`;
+        }
+        
+        // Render wallet
+        function renderWallet() {
+            document.getElementById('credCount').textContent = wallet.credentials.length;
+            document.getElementById('anchoredCount').textContent = wallet.credentials.filter(c=>c.hash).length;
+            
+            let html = '';
+            wallet.credentials.slice().reverse().forEach(c => {
+                html += `
+                <div class="cred-card">
+                    <div class="cred-id">${c.id}</div>
+                    <div>${c.name}</div>
+                    <div class="cred-hash">${c.hash?.substring(0, 24)}...</div>
+                    <div class="cred-meta">${c.issuer} • ${c.issueDate} • ${c.skills?.slice(0,2).join(', ')}</div>
+                </div>`;
+            });
+            document.getElementById('credList').innerHTML = html || 'No credentials yet';
+        }
+        
+        // Export wallet
+        function exportWallet() {
+            const data = JSON.stringify(wallet, null, 2);
+            const blob = new Blob([data], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'checkanchor-wallet.json';
+            a.click();
+        }
+        
+        // Import wallet
+        function importWallet() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = async e => {
+                const text = await e.target.files[0].text();
+                wallet = JSON.parse(text);
+                saveWallet();
+                renderWallet();
+                alert('Wallet imported!');
+            };
+            input.click();
+        }
+        
+        // Simulate blockchain
+        function simulateChain() {
+            const blocks = wallet.credentials.length || 1;
+            let html = '';
+            for(let i = 0; i < Math.min(blocks, 5); i++) {
+                const c = wallet.credentials[i];
+                html += `<div class="cred-card">
+                    <div class="cred-id">Block #${i}</div>
+                    <div>${c?.id || 'Genesis'}</div>
+                    <div class="cred-hash">${c?.hash?.substring(0, 20) || '000000...'}...</div>
+                </div>`;
+            }
+            document.getElementById('blockchainViz').innerHTML = html || 'Create credentials to see chain';
+        }
+        
+        function showTab(tab) {
+            document.querySelectorAll('[id$="Tab"]').forEach(t => t.classList.add('hidden'));
+            document.getElementById(tab+'Tab').classList.remove('hidden');
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            if(tab === 'explore') simulateChain();
+        }
+    </script>
+</body>
+</html>
