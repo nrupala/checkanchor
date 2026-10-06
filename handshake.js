@@ -1,6 +1,9 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Nrupal Akolkar
+
 /**
  * Checkinfo Universal Handshake API
- * Version: 1.0.0
+ * Version: 1.0.1
  * Purpose: Enable inter-app communication between Checkinfo ecosystem apps
  * 
  * Usage:
