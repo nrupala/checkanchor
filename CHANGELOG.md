@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+- Escape credential fields when rendering the wallet and chain views, so
+  imported wallet data cannot inject markup (CodeQL js/xss-through-dom).
+
+
 ### Added
 - Portfolio certification: CONTRIBUTING.md (PR-flow discipline), CHANGELOG.md,
   NOTICE.md attribution file; MIT license header on handshake.js.
